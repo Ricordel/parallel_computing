@@ -1,0 +1,5 @@
+examples/*
+*.o
+*.d
+.clang_complete
+hello_worlds/*
