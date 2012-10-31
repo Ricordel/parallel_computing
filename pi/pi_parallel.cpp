@@ -43,7 +43,7 @@ static long double compute_pi(uint64_t nThreads, uint64_t nIterations)
 
         // Each thread will to iterations_by_thread, except for the last one
         // which will do at most as much, probably less.
-        uint64_t iterations_by_thread = nIterations / (nThreads - 1);
+        uint64_t iterations_by_thread = nIterations / nThreads;
         long double step = (long double)1 / (long double)nIterations;
         long double sum = 0;
 
