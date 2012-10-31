@@ -5,6 +5,7 @@
 #include <future>
 #include <vector>
 #include <cstdint>
+#include <omp.h>
 
 #define _USE_MATH_DEFINES /* defines non standard macros like M_PI */
 #include <cmath>
@@ -76,6 +77,8 @@ static long double compute_pi(uint64_t nThreads, uint64_t nIterations)
 
 int main(int argc, const char *argv[])
 {
+        double start_time = omp_get_wtime();
+
         uint64_t nIterations = 10000000;
         uint64_t nThreads = std::thread::hardware_concurrency();
 
@@ -106,9 +109,17 @@ int main(int argc, const char *argv[])
 
         long double pi = compute_pi(nThreads, nIterations);
 
-        std::cout << "After " << nIterations << " steps on " << nThreads << " threads,"
-                  << "\n\t my pi   = " << std::setprecision(18) << pi
-                  << "\n\t real pi = " << std::setprecision(18) << M_PI << std::endl;
+        double end_time = omp_get_wtime();
+
+        //std::cout << "After " << nIterations << " steps on "
+                  //<< nThreads << " threads (in " << end_time - start_time << "), "
+                  //<< "\n\t my pi   = " << std::setprecision(18) << pi
+                  //<< "\n\t real pi = " << std::setprecision(18) << M_PI << std::endl;
+        
+        std::cout << "{ \"nIterations\": " << nIterations
+                  << ", \"time\": " << end_time - start_time
+                  << ", \"pi\": " << std::setprecision(18) << pi << "}" << std::endl;
+        
         
         return 0;
 }

@@ -6,11 +6,14 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <omp.h>
 
 
 
 int main(int argc, const char *argv[])
 {
+        double start_time = omp_get_wtime();
+
         uint64_t nIterations = 10000000;
         if (argc == 2) {
                 std::istringstream iss(argv[1]);
@@ -32,9 +35,15 @@ int main(int argc, const char *argv[])
         }
         
         pi = sum * step;
-        std::cout << "After " << nIterations << " steps,"
-                  << "\n\t my pi   = " << std::setprecision(18) << pi
-                  << "\n\t real pi = " << std::setprecision(18) << M_PI << std::endl;
+
+        double end_time = omp_get_wtime();
+
+        //std::cout << "After " << nIterations << " steps (in " << end_time - start_time << " sec),"
+                  //<< "\n\t my pi   = " << std::setprecision(18) << pi
+                  //<< "\n\t real pi = " << std::setprecision(18) << M_PI << std::endl;
         
+        std::cout << "{ \"nIterations\": " << nIterations
+                  << ", \"time\": " << end_time - start_time
+                  << ", \"pi\": " << std::setprecision(18) << pi << "}" << std::endl;
         return 0;
 }

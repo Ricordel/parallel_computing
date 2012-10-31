@@ -1,6 +1,6 @@
 #CXX = /opt/gnu/gcc-cilk/bin/g++
 CXX = g++
-CXXFLAGS = -std=c++11 -pthread -g -O2 -I../utils/ -Wall -Wextra
+CXXFLAGS = -std=c++11 -pthread -g -O2 -I../utils/ -Wall -Wextra -fopenmp
 
 
 EXE_seq = pi_seq
