@@ -1,0 +1,2 @@
+Main-Class: test.Pi
+Class-Path: scala-library.jar
