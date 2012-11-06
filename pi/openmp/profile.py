@@ -4,7 +4,7 @@
 import json
 import matplotlib.pyplot as plt
 
-cpp_filename = "../par_perfs.json"
+cpp_filename = "../cpp/par_perfs.json"
 omp_filename = "omp_perfs.json"
 
 cpp_dict = json.load(open(cpp_filename))
