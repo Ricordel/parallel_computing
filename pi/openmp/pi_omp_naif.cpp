@@ -20,6 +20,15 @@ static inline void usage(const char *progName)
 }
 
 
+static inline long double compute_one_value(uint64_t i, long double step)
+{
+        long double x = (i + 0.5) * step;
+        return 4 / (1 + x * x);
+}
+
+
+
+
 /// Compute the part of the sum between from (included) and to (excluded)
 static long double partial_sum(uint64_t from,
                                uint64_t to,
@@ -29,8 +38,7 @@ static long double partial_sum(uint64_t from,
         long double sum = 0;
 
         for (uint64_t i = from; i < to; i++) {
-                long double x = (i + 0.5) * step;
-                sum += 4 / (1 + x * x);
+                sum += compute_one_value(i, step);
         }
 
         return sum;
@@ -51,7 +59,7 @@ static long double compute_pi(uint64_t nThreads, uint64_t nIterations)
                 uint64_t from = id * iterations_by_thread;
                 uint64_t to = min((id + 1) * iterations_by_thread, nIterations);
 #pragma omp atomic // Be careful, sum is shared !
-                sum += partial_sum(from, to, nIterations); // Il semble que ceci soit sûr
+                sum += partial_sum(from, to, nIterations);
         }
 
         return sum * step;
