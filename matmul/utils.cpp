@@ -26,7 +26,7 @@ int matrix_from_file(const char * filename, double ***out_matrix, unsigned int *
         // Allocate the matrix. Ugly C style, we'll try with containers later to compare performaces.
         try {
                 matrix = new double*[size];
-                for (int i = 0; i < size; i++) {
+                for (unsigned int i = 0; i < size; i++) {
                         matrix[i] = new double[size];
                 }
         } catch (std::bad_alloc&) {
@@ -34,8 +34,8 @@ int matrix_from_file(const char * filename, double ***out_matrix, unsigned int *
                 throw;
         }
 
-        for (int i = 0; i < size; i++) {
-                for (int j = 0; j < size; j++) {
+        for (unsigned int i = 0; i < size; i++) {
+                for (unsigned int j = 0; j < size; j++) {
                         double val;
                         mat_file >> val;
                         if (mat_file.fail()) {
@@ -54,7 +54,7 @@ err:
                 mat_file.close();
         }
         if (matrix) {
-                for (int i = 0; i < size; i++) {
+                for (unsigned int i = 0; i < size; i++) {
                         delete [] matrix[i];
                 }
                 delete[] matrix;

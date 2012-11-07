@@ -75,10 +75,12 @@ int mat_mult(double ** mat1,
 
         for (unsigned int i = 0; i < size; i++) {
                 for (unsigned int j = 0; j < size; j++) {
-                        rslt[i][j] = 0;
+                        double acc = 0;
+#pragma omp parallel for reduction(+:acc)
                         for (unsigned int k = 0; k < size; k++) {
-                                rslt[i][j] += mat1[i][k] * mat2[k][j];
+                                acc += mat1[i][k] * mat2[k][j];
                         }
+                        rslt[i][j] = acc;
                 }
         }
 
