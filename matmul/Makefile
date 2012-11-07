@@ -1,7 +1,7 @@
 EXES = naive_monothread openmp_version
 
 CXX=g++
-CXXFLAGS=-c -O2 -g -Wall -Wextra -fopenmp
+CXXFLAGS=-c -O3 -g -Wall -Wextra -fopenmp
 
 LD = g++
 LDFLAGS = -lgomp

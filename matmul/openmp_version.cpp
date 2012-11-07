@@ -73,10 +73,11 @@ int mat_mult(double ** mat1,
         }
 
 
+#pragma omp parallel for
         for (unsigned int i = 0; i < size; i++) {
                 for (unsigned int j = 0; j < size; j++) {
                         double acc = 0;
-#pragma omp parallel for reduction(+:acc)
+                        // Ceci doit pouvoir se SIMD (g++ le fait seul ?)
                         for (unsigned int k = 0; k < size; k++) {
                                 acc += mat1[i][k] * mat2[k][j];
                         }
