@@ -49,6 +49,10 @@ int quicksort(int *tab, int p, int r);
 int init_data(int *tab, int length);
 
 
+/* Runs some tests
+ * 
+ * return 0 if ok, 1 if failed */
+int run_tests(void);
 
 
 
@@ -66,64 +70,92 @@ bool is_sorted(int *tab, int length)
 }
 
 
-/* This is the reference implementation, not resonsible for it. */
+
+#define swap_int(tab, i, j) \
+do { \
+        int tmp = tab[i]; \
+        tab[i] = tab[j]; \
+        tab[j] = tmp; \
+} while (0)
+
+
+
+
+/* My version */
 int partition(int *tab, int p, int r, int *pPivot)
 {
-	int x = tab[p];
-	int k = p;
-	int l = r + 1;
-	int t;
-
         check_null(pPivot);
+{
+        /* Take the first element as pivot */
+        int pivot = tab[p];
+        int firstGTPivot = p + 1;
+        int lastLEPivot  = r;
 
-	while (1) {
-		do
-			k++;
-		while ((tab[k] <= x) && (k < r));
-		do
-			l--;
-		while (tab[l] > x);
 
-		while (k < l) {
-			t = tab[k];
-			tab[k] = tab[l];
-			tab[l] = t;
-			do
-				k++;
-			while (tab[k] <= x);
-			do
-				l--;
-			while (tab[l] > x);
-		}
-		t = tab[p];
-		tab[p] = tab[l];
-		tab[l] = t;
+        for (;;) {
+                /* Find the last element that is <= pivot, checking we do not go too far */
+                while (tab[lastLEPivot] > pivot && lastLEPivot >= firstGTPivot) {
+                        lastLEPivot--;
+                }
 
-                *pPivot = l;
-                return 0;
-	}
+                /* Find the first element that is > pivot, checking we do not go too far */
+                while (tab[firstGTPivot] <= pivot && firstGTPivot <= lastLEPivot) {
+                        firstGTPivot++;
+                }
 
+                /* Do we have to swap two values ? */
+                if (firstGTPivot < lastLEPivot) {
+                        swap_int(tab, firstGTPivot, lastLEPivot);
+
+                } else { /* our array is partitioned, just put the pivot to the right place */
+
+                        check(firstGTPivot == lastLEPivot + 1,
+                              "firstGTPivot = %d, lastLEPivot = %d", firstGTPivot, lastLEPivot);
+                        swap_int(tab, p, lastLEPivot);
+                        *pPivot = lastLEPivot;
+                        break;
+                }
+        }
+
+        return 0;
 error:
         return -1;
 }
+}
+
+
 
 int quicksort(int *tab, int p, int r)
 {
-        int ret = 0;
+        int ret1 = 0;
+        int ret2 = 0;
+	int q;
+
 	if (p < r) {
-		int q;
-                ret = partition(tab, p, r, &q);
-                check (ret == 0, "error in partiton between %d and %d\n", p, r);
+                ret1 = partition(tab, p, r, &q);
+                check (ret1 == 0, "error in partiton between %d and %d\n", p, r);
 
-		ret = quicksort(tab, p, q - 1);
-                check (ret == 0, "Error calling quicksort between %d and %d\n", p, q-1);
+#pragma omp parallel
+#pragma omp single
+#pragma omp task firstprivate(q) shared(ret1)
+                {
+		ret1 = quicksort(tab, p, q - 1);
+                }
 
-		ret = quicksort(tab, q + 1, r);
-                check (ret == 0, "Error calling quicksort between %d and %d\n", q + 1, r);
+#pragma omp task firstprivate(q) shared(ret2)
+                {
+		ret2 = quicksort(tab, q + 1, r);
+                }
+#pragma omp taskwait
+
+                check (ret1 == 0, "Error calling quicksort between %d and %d, ret: %d\n", q + 1, r, ret1);
+                check (ret2 == 0, "Error calling quicksort between %d and %d, ret: %d\n", p, q-1, ret2);
 	}
 
+        return 0;
+
 error:
-        return ret;
+        return -1;
 }
 
 
@@ -148,7 +180,6 @@ int init_data(int *tab, int length)
 
 
 
-
 int main(int argc, char *argv[])
 {
         int ret;
@@ -158,6 +189,10 @@ int main(int argc, char *argv[])
         if (argc != 2) {
                 printf("Usage: %s nItems\n", argv[0]);
                 goto error;
+        }
+
+        if (strcmp(argv[1], "tests") == 0) {
+                return run_tests();
         }
 
         nItems = atoi(argv[1]); /* Unsafe ! */
@@ -179,13 +214,138 @@ int main(int argc, char *argv[])
         double end_time = omp_get_wtime();
 
         if (!is_sorted(tab, nItems)) {
-                puts("ERROR: the array is not sorted");
+                log_err("the array is not sorted");
         } else {
-                printf("OK, array correctly sorted, in %lf sec\n", end_time - start_time);
+                printf("{\"nElems\": %d, \"time\": %lf}\n", nItems, end_time - start_time);
         }
 
 	return 0;
 error:
         free(tab);
         exit(1);
+}
+
+
+
+
+int zero_length_test()
+{
+        puts("It should handle 0-length arrays");
+        int dummy;
+        int ret = quicksort(&dummy, 0, 0);
+        check(ret == 0, "quicksort failed");
+
+        return 0;
+error:
+        return -1;
+}
+
+
+int one_length_test()
+{
+        puts("It should handle 1-length arrays");
+        int dummy = 9;
+        int ret = quicksort(&dummy, 0, 0);
+        check(ret == 0, "quicksort failed");
+        if (dummy != 9) {
+                return -1;
+        }
+
+        return 0;
+error:
+        return -1;
+}
+
+
+int two_length_test()
+{
+        puts("It should handle 2-length arrays");
+        {
+                int tab[2] = {0, 23};
+                int ret = quicksort(tab, 0, 1);
+                check(ret == 0, "quicksort failed");
+                if (tab[0] > tab[1]) {
+                        return -1;
+                }
+        }
+        {
+                int tab[2] = {23, 90};
+                int ret = quicksort(tab, 0, 1);
+                check(ret == 0, "quicksort failed");
+                if (tab[0] > tab[1]) {
+                        return -1;
+                }
+        }
+
+        return 0;
+error:
+        return -1;
+}
+
+
+int already_sorted_test()
+{
+        puts("It should handle already sorted arrays");
+
+        int tab[5] = {0, 1, 5, 6, 10};
+        int ret = quicksort(tab, 0, 4);
+        check(ret == 0, "Error while sorting");
+
+        if (!is_sorted(tab, 5)) {
+                return -1;
+        }
+
+        return 0;
+error:
+        return -1;
+}
+
+
+int reverse_sorted_test()
+{
+        puts("It should handle reverse sorted arrays");
+
+        int tab[5] = {2345, 523, 98, 4, 2};
+        int ret = quicksort(tab, 0, 4);
+        check(ret == 0, "Error while sorting");
+
+        if (!is_sorted(tab, 5)) {
+                return -1;
+        }
+
+        return 0;
+error:
+        return -1;
+}
+
+
+#define RUN_TEST(test) \
+do { \
+        int ret = test(); \
+        if (ret != 0) { \
+                nb_failed++; \
+                puts("\t FAILED"); \
+        } else { \
+                puts("\t OK"); \
+        } \
+} while (0)
+
+
+int run_tests(void)
+{
+        int nb_failed = 0;
+
+        RUN_TEST(zero_length_test);
+        RUN_TEST(one_length_test);
+        RUN_TEST(two_length_test);
+        RUN_TEST(already_sorted_test);
+        RUN_TEST(reverse_sorted_test);
+
+        if (nb_failed == 0) {
+                puts("ALL TESTS PASSED");
+        } else {
+                printf("%d TESTS FAILED\n", nb_failed);
+        }
+
+        return nb_failed;
 }

@@ -140,6 +140,7 @@ int quicksort(int *tab, int p, int r)
                 check (ret == 0, "Error calling quicksort between %d and %d\n", q + 1, r);
 	}
 
+        return 0;
 error:
         return ret;
 }
