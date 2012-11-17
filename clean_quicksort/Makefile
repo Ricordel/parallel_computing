@@ -11,7 +11,7 @@ LDFLAGS = $(OPTLIBS)
 OPTLIBS += -lgomp
 
 # Project name
-PROJECT = Quicksort qsort_omp
+PROJECT = qsort_seq qsort_omp
 
 # Directories
 OBJDIR = bin
@@ -35,6 +35,9 @@ Quicksort: $(OBJDIR)/Quicksort.o
 	$(LD) $(LDFLAGS) $< -o $@
 
 qsort_omp: $(OBJDIR)/qsort_omp.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+qsort_seq: $(OBJDIR)/qsort_seq.o
 	$(LD) $(LDFLAGS) $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
