@@ -6,9 +6,11 @@
 #include <string.h>
 
 #ifdef NDEBUG
-#define debug(M, ...)
+#define debug(...)
 #else
-#define debug(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, __VA_ARGS__)
+#define debug(...) fprintf(stderr, "[DEBUG] (%s:%d) ", __FILE__, __LINE__);\
+                   fprintf(stderr, __VA_ARGS__); \
+                   fprintf(stderr, "\n")
 #endif
 
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
@@ -21,7 +23,7 @@
                       fprintf(stderr, __VA_ARGS__); \
                       fprintf(stderr, "\n")
 
-#define log_info(...) fprintf(stderr, "[INFO] (%s:%d) ", __FILE__, __LINE__, __VA_ARGS__)\
+#define log_info(...) fprintf(stderr, "[INFO] (%s:%d) ", __FILE__, __LINE__);\
                       fprintf(stderr, __VA_ARGS__); \
                       fprintf(stderr, "\n")
 

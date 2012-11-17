@@ -10,6 +10,10 @@
 #include "dbg.h"
 
 
+/* Below this threshold, no new tasks will be spawned */
+#define SPAWN_LIMIT 1000
+
+
 /** Check if an array is sorted or not
  * in: tab      The array to check
  * in: length   The length of this array
@@ -125,6 +129,7 @@ error:
 
 
 
+
 int quicksort(int *tab, int p, int r)
 {
         int ret1 = 0;
@@ -134,20 +139,31 @@ int quicksort(int *tab, int p, int r)
 	if (p < r) {
                 ret1 = partition(tab, p, r, &q);
                 check (ret1 == 0, "error in partiton between %d and %d\n", p, r);
-
-#pragma omp parallel
+                
 #pragma omp single
-#pragma omp task firstprivate(q) shared(ret1)
-                {
-		ret1 = quicksort(tab, p, q - 1);
+        {
+                if (q - p < SPAWN_LIMIT) {
+		        ret1 = quicksort(tab, p, q - 1);
+                } else {
+#pragma omp task firstprivate(q)
+                        {
+                                debug("Spawn from thread %d\n", omp_get_num_threads());
+                                ret1 = quicksort(tab, p, q - 1);
+                        }
                 }
 
-#pragma omp task firstprivate(q) shared(ret2)
-                {
-		ret2 = quicksort(tab, q + 1, r);
+                if (r - q < SPAWN_LIMIT) {
+                        ret2 = quicksort(tab, q + 1, r);
+                } else {
+#pragma omp task firstprivate(q)
+                        {
+                                debug("Spawn from thread %d\n", omp_get_num_threads());
+                                ret2 = quicksort(tab, q + 1, r);
+                        }
                 }
 #pragma omp taskwait
 
+        } /* omp parallel single */
                 check (ret1 == 0, "Error calling quicksort between %d and %d, ret: %d\n", q + 1, r, ret1);
                 check (ret2 == 0, "Error calling quicksort between %d and %d, ret: %d\n", p, q-1, ret2);
 	}
@@ -185,6 +201,11 @@ int main(int argc, char *argv[])
         int ret;
         int nItems;
         int *tab = NULL;
+
+#pragma omp parallel num_threads(4)
+        {
+                /* Just to spawn threads here */
+        }
 
         if (argc != 2) {
                 printf("Usage: %s nItems\n", argv[0]);

@@ -1,13 +1,13 @@
 # Compiler options
 #CC = gcc
 #CXX = g++
-CFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -std=c99 -pedantic $(OPTFLAGS)
-CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic $(OPTFLAGS)
+CFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -std=c99 -pedantic $(OPTFLAGS)
+CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic $(OPTFLAGS)
 OPTFLAGS += -fopenmp
 
 # Superset
 LD = g++
-LDFLAGS = $(OPTLIBS)
+LDFLAGS = $(OPTLIBS) -pg
 OPTLIBS += -lgomp
 
 # Project name
@@ -41,10 +41,10 @@ qsort_seq: $(OBJDIR)/qsort_seq.o
 	$(LD) $(LDFLAGS) $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) $(OPTS) -c $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) $(OPTS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $< -o $@
 	
 
 # dev is all + debug options: -g, -O0, -DDEBUG
