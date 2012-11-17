@@ -134,16 +134,14 @@ int quicksort(int *tab, int p, int r)
 {
         int ret1 = 0;
         int ret2 = 0;
-	int q;
+        int q;
 
-	if (p < r) {
+        if (p < r) {
                 ret1 = partition(tab, p, r, &q);
                 check (ret1 == 0, "error in partiton between %d and %d\n", p, r);
-                
-#pragma omp single
-        {
+
                 if (q - p < SPAWN_LIMIT) {
-		        ret1 = quicksort(tab, p, q - 1);
+                        ret1 = quicksort(tab, p, q - 1);
                 } else {
 #pragma omp task firstprivate(q)
                         {
@@ -163,10 +161,9 @@ int quicksort(int *tab, int p, int r)
                 }
 #pragma omp taskwait
 
-        } /* omp parallel single */
                 check (ret1 == 0, "Error calling quicksort between %d and %d, ret: %d\n", q + 1, r, ret1);
                 check (ret2 == 0, "Error calling quicksort between %d and %d, ret: %d\n", p, q-1, ret2);
-	}
+        }
 
         return 0;
 
@@ -178,17 +175,17 @@ error:
 
 int init_data(int *tab, int length)
 {
-	int i, x, y, t;
-	for (i = 0; i < length; i++)
-		tab[i] = i;
+        int i, x, y, t;
+        for (i = 0; i < length; i++)
+                tab[i] = i;
 
-	for (i = 0; i < length; i++) {
-		x = rand() % length;
-		y = rand() % length;
-		t = tab[y];
-		tab[y] = tab[x];
-		tab[x] = t;
-	}
+        for (i = 0; i < length; i++) {
+                x = rand() % length;
+                y = rand() % length;
+                t = tab[y];
+                tab[y] = tab[x];
+                tab[x] = t;
+        }
 
         return 0;
 }
@@ -201,11 +198,6 @@ int main(int argc, char *argv[])
         int ret;
         int nItems;
         int *tab = NULL;
-
-#pragma omp parallel num_threads(4)
-        {
-                /* Just to spawn threads here */
-        }
 
         if (argc != 2) {
                 printf("Usage: %s nItems\n", argv[0]);
@@ -227,11 +219,14 @@ int main(int argc, char *argv[])
         tab = malloc(nItems * sizeof(int));
         check_mem(tab);
 
-	ret = init_data(tab, nItems);
+        ret = init_data(tab, nItems);
         check (ret == 0, "Failed to init data\n");
 
         double start_time = omp_get_wtime();
-	quicksort(tab, 0, nItems - 1);
+#pragma omp parallel
+#pragma omp single
+        quicksort(tab, 0, nItems - 1);
+
         double end_time = omp_get_wtime();
 
         if (!is_sorted(tab, nItems)) {
@@ -240,7 +235,7 @@ int main(int argc, char *argv[])
                 printf("{\"nElems\": %d, \"time\": %lf}\n", nItems, end_time - start_time);
         }
 
-	return 0;
+        return 0;
 error:
         free(tab);
         exit(1);
@@ -341,15 +336,15 @@ error:
 
 
 #define RUN_TEST(test) \
-do { \
-        int ret = test(); \
-        if (ret != 0) { \
-                nb_failed++; \
-                puts("\t FAILED"); \
-        } else { \
-                puts("\t OK"); \
-        } \
-} while (0)
+        do { \
+                int ret = test(); \
+                if (ret != 0) { \
+                        nb_failed++; \
+                        puts("\t FAILED"); \
+                } else { \
+                        puts("\t OK"); \
+                } \
+        } while (0)
 
 
 int run_tests(void)
