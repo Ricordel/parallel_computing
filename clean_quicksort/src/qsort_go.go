@@ -3,10 +3,12 @@ package main
 import (
     "fmt"
     "math/rand"
+    "os"
+    "strconv"
+    "time"
 )
 
 const spawnThreshold = 100
-const nbItems = 1000000
 
 func check(predicate bool, msg string) {
     if !predicate {
@@ -33,13 +35,11 @@ func makeArray(nbItems int) []int {
 }
 
 
+func partition(tab []int) (t1 []int, t2 []int) {
 
-/* Return pivot and partition IN PLACE the array */
-func partition(tab []int, p int, r int) (pivotIndex int) {
-
-    var pivot = tab[p]
-    var lastLEPivot = r
-    var firstGTPivot = p + 1
+    var pivot = tab[0]
+    var lastLEPivot = len(tab) - 1
+    var firstGTPivot = 1
 
     for {
         /* Find the last element that is <= pivot, checking we do not go too far */
@@ -57,23 +57,22 @@ func partition(tab []int, p int, r int) (pivotIndex int) {
             swap_in_tab(tab, firstGTPivot, lastLEPivot)
         } else {
             /* Our array is partitioned, put the pivot in the right place */
-            swap_in_tab(tab, p, lastLEPivot)
+            swap_in_tab(tab, 0, lastLEPivot)
             check(firstGTPivot == lastLEPivot + 1, "firstGTPivot != lastLEPivot + 1")
-            return lastLEPivot
+            break
         }
     }
     
-    return -1 /* Bad, but don't care for this small test */
+    return tab[:lastLEPivot], tab[lastLEPivot+1:]
 }
 
 
+func quicksort(tab []int) {
+    if len(tab) > 1 {
+        t1, t2 := partition(tab)
 
-func quicksort(tab []int, p int, r int) {
-    if p < r {
-        q := partition(tab, p, r)
-
-        quicksort(tab, p, q-1)
-        quicksort(tab, q+1, r)
+        quicksort(t1)
+        quicksort(t2)
     }
 }
 
@@ -91,12 +90,27 @@ func checkSorted(tab []int) bool {
 
 
 func main() {
-    arr := makeArray(20)
-    quicksort(arr, 0, len(arr) - 1)
+
+    if len(os.Args) < 2 {
+        fmt.Println("Usage: qsort_go.go nItems")
+        os.Exit(1)
+    }
+
+    nItems, err := strconv.Atoi(os.Args[1])
+    if err != nil {
+        fmt.Printf("Failed to parse '%s' as int\n", os.Args[1])
+        os.Exit(1)
+    }
+
+    arr := makeArray(nItems)
+
+    startTime := time.Now()
+    quicksort(arr)
+    duration := time.Since(startTime)
 
     if (checkSorted(arr)) {
-        fmt.Println("Gagné !")
+        fmt.Printf("{\"nElems\": %d, \"time\": %f}\n", nItems, duration.Seconds());
     } else {
-        fmt.Println("Perdu !")
+        fmt.Println("ERROR: the array is not sorted")
     }
 }
