@@ -94,12 +94,12 @@ int partition(int *tab, int p, int r, int *pPivot)
 
         for (;;) {
                 /* Find the last element that is <= pivot, checking we do not go too far */
-                while (tab[lastLEPivot] > pivot && lastLEPivot >= firstGTPivot) {
+                while (lastLEPivot >= firstGTPivot && tab[lastLEPivot] > pivot) {
                         lastLEPivot--;
                 }
 
                 /* Find the first element that is > pivot, checking we do not go too far */
-                while (tab[firstGTPivot] <= pivot && firstGTPivot <= lastLEPivot) {
+                while (firstGTPivot < lastLEPivot && tab[firstGTPivot] <= pivot) {
                         firstGTPivot++;
                 }
 
@@ -108,9 +108,6 @@ int partition(int *tab, int p, int r, int *pPivot)
                         swap_int(tab, firstGTPivot, lastLEPivot);
 
                 } else { /* our array is partitioned, just put the pivot to the right place */
-
-                        check(firstGTPivot == lastLEPivot + 1,
-                              "firstGTPivot = %d, lastLEPivot = %d", firstGTPivot, lastLEPivot);
                         swap_int(tab, p, lastLEPivot);
                         *pPivot = lastLEPivot;
                         break;
