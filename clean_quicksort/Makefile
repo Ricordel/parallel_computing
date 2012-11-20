@@ -1,6 +1,6 @@
 # Compiler options
-#CC = gcc
-#CXX = g++
+CC = gcc
+CXX = g++
 CFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -std=c99 -pedantic $(OPTFLAGS)
 CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic $(OPTFLAGS)
 OPTFLAGS += -fopenmp
@@ -43,12 +43,11 @@ qsort_seq: $(OBJDIR)/qsort_seq.o
 qsort_cilk: $(OBJDIR)/qsort_cilk.o
 	$(LD) -L/opt/gnu/gcc-cilk/lib -lcilkrts -ldl $(LDFLAGS) $< -o $@
 
+$(OBJDIR)/%_cilk.o: $(SRCDIR)/%_cilk.c
+	$(CC) $(CFLAGS) -fcilkplus $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
-
-$(OBJDIR)/%_cilk.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -fcilkplus $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@
@@ -61,7 +60,7 @@ dev: CPPFLAGS += -DDEBUG
 dev: all
 
 test: depends $(OBJS)
-	cd tests; $(MAKE) run
+	cd tests && $(MAKE) run
 
 
 depends: buildrepo
@@ -70,10 +69,10 @@ depends: buildrepo
 
 clean:
 	rm $(PROJECT) $(OBJDIR) -Rf
-	cd tests; $(MAKE) clean
+	cd tests && $(MAKE) clean
 
 cleanall: clean
-	cd tests; $(MAKE) cleanall
+	cd tests && $(MAKE) cleanall
 
 
 # From Zed Shaw's Learn C the hard way, chap 29
