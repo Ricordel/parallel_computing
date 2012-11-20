@@ -3,6 +3,7 @@
 MAX_VAL=1000000
 
 nitems_to_test="1000 10000 30000 60000 100000 300000 600000 1000000 3000000 6000000 10000000"
+#nitems_to_test="1000 10000 30000 60000 100000 300000 600000 1000000 3000000"
 
 # Takes the name of the executable as entry
 function gather_perfs {
@@ -20,4 +21,8 @@ function gather_perfs {
 }
 
 
+export GOMAXPROCS=4
 gather_perfs qsort_seq
+gather_perfs qsort_omp
+gather_perfs qsort_go_seq
+gather_perfs qsort_go_par

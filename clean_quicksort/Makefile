@@ -1,17 +1,18 @@
 # Compiler options
 CC = gcc
 CXX = g++
+GOCC = go build
 CFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -std=c99 -pedantic $(OPTFLAGS)
 CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic $(OPTFLAGS)
 OPTFLAGS += -fopenmp
 
 # Superset
 LD = g++
-LDFLAGS = $(OPTLIBS) -pg
+LDFLAGS = $(OPTLIBS)
 OPTLIBS += -lgomp
 
 # Project name
-PROJECT = qsort_seq qsort_omp qsort_cilk
+PROJECT = qsort_seq qsort_omp qsort_go_seq qsort_go_par
 
 # Directories
 OBJDIR = bin
@@ -43,8 +44,8 @@ qsort_seq: $(OBJDIR)/qsort_seq.o
 qsort_cilk: $(OBJDIR)/qsort_cilk.o
 	$(LD) -L/opt/gnu/gcc-cilk/lib -lcilkrts -ldl $(LDFLAGS) $< -o $@
 
-$(OBJDIR)/%_cilk.o: $(SRCDIR)/%_cilk.c
-	$(CC) $(CFLAGS) -fcilkplus $< -o $@
+#$(OBJDIR)/%_cilk.o: $(SRCDIR)/%_cilk.c
+	#$(CC) $(CFLAGS) -fcilkplus $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -52,6 +53,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 	
+%:$(SRCDIR)/%.go
+	$(GOCC) -o $@ $<
 
 # dev is all + debug options: -g, -O0, -DDEBUG
 dev: CFLAGS = -O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
@@ -68,7 +71,7 @@ depends: buildrepo
 
 
 clean:
-	rm $(PROJECT) $(OBJDIR) -Rf
+	rm -f $(PROJECT) $(OBJDIR) -Rf
 	cd tests && $(MAKE) clean
 
 cleanall: clean

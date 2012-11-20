@@ -13,7 +13,6 @@ if len(sys.argv) < 2:
     print("Usage: %s file [file...]" % sys.argv[0])
     exit(1)
 else:
-    print("Number of args: %d" % len(sys.argv))
     filenames = sys.argv[1:]
 
 correspondance_color_files = ""

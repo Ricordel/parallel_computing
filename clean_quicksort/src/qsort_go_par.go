@@ -67,51 +67,37 @@ func partition(tab []int) (t1 []int, t2 []int) {
 }
 
 
+
 func quicksort(tab []int) {
+    fakeChan := make(chan bool)
+    _quicksort(tab, fakeChan, false)
+}
+
+
+
+func _quicksort(tab []int, done chan bool, inCoroutine bool) {
     if len(tab) > 1 {
         childrenDone := make(chan bool) /* To wait for the return */
         t1, t2 := partition(tab)
 
         if len(tab) > spawnThreshold {
-            go quicksort_corout(t1, childrenDone)
-            go quicksort_corout(t2, childrenDone)
+            go _quicksort(t1, childrenDone, true)
+            go _quicksort(t2, childrenDone, true)
 
             /* wait for both children */
             <-childrenDone
             <-childrenDone
         } else {
             /* Array too small, don't spawn the machinery */
-            quicksort(t1)
-            quicksort(t2)
-        }
-    }
-}
-
-
-
-func quicksort_corout(tab []int, done chan bool) {
-    if len(tab) > 1 {
-        childrenDone := make(chan bool) /* To wait for the return */
-        t1, t2 := partition(tab)
-
-        if len(tab) > spawnThreshold {
-            go quicksort_corout(t1, childrenDone)
-            go quicksort_corout(t2, childrenDone)
-
-            /* wait for both children */
-            <-childrenDone
-            <-childrenDone
-        } else {
-            /* Array too small, don't spawn the machinery */
-            quicksort(t1)
-            quicksort(t2)
+            _quicksort(t1, childrenDone, false)
+            _quicksort(t2, childrenDone, false)
         }
     }
 
-    done<- true
+    if inCoroutine {
+        done<- true
+    }
 }
-
-
 
 
 func checkSorted(tab []int) bool {
