@@ -11,7 +11,7 @@ LDFLAGS = $(OPTLIBS) -pg
 OPTLIBS += -lgomp
 
 # Project name
-PROJECT = qsort_seq qsort_omp
+PROJECT = qsort_seq qsort_omp qsort_cilk
 
 # Directories
 OBJDIR = bin
@@ -40,8 +40,15 @@ qsort_omp: $(OBJDIR)/qsort_omp.o
 qsort_seq: $(OBJDIR)/qsort_seq.o
 	$(LD) $(LDFLAGS) $< -o $@
 
+qsort_cilk: $(OBJDIR)/qsort_cilk.o
+	$(LD) -L/opt/gnu/gcc-cilk/lib -lcilkrts -ldl $(LDFLAGS) $< -o $@
+
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
+
+$(OBJDIR)/%_cilk.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -fcilkplus $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@
